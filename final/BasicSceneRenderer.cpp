@@ -5,6 +5,10 @@
 #include <stdlib.h>
 #include <iostream>
 
+int level = 0;
+int baseMonsterTimers[] = { 120, 100, 80, 60, 40 };
+int monsterTimer = 0;
+
 bool playerAttacking = false;
 float attackBuffer = 0;
 float movementBuffer = 0;
@@ -119,10 +123,13 @@ void BasicSceneRenderer::initialize()
 	Mesh* flMesh = CreateTexturedQuad(1, 1, 1, 1);
 	mMeshes.push_back(flMesh);
 
+	Mesh* dragonMesh = CreateTexturedQuad(4, 4, 1, 1);
+	mMeshes.push_back(dragonMesh);
+
     //TODO: Load textures
     std::vector<std::string> texNames;
 	texNames.push_back("textures/Road.tga");
-    texNames.push_back("textures/Block.tga");
+    texNames.push_back("textures/monsters/Dragon.tga");
     texNames.push_back("textures/Rock.tga");
 	
 	//player walk cycle, has 8 frames
@@ -162,9 +169,9 @@ void BasicSceneRenderer::initialize()
 	// floor
 	mEntities.push_back(new Entity(cfMesh, mMaterials[0], Transform(0, -0.5f * roomHeight, -300, glm::angleAxis(glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f)))));
 	//player. make sure it's rendered last
-	mEntities.push_back(new Entity(flMesh, mMaterials[1], Transform(-5.0f, -11.5f, 27)));
+	mEntities.push_back(new Entity(flMesh, mMaterials[3], Transform(-5.0f, -11.5f, 27.0f)));
 	//test monster
-	mEntities.push_back(new Entity(flMesh, mMaterials[1], Transform(1.7f, -11.5f, 27)));
+	mEntities.push_back(new Entity(dragonMesh, mMaterials[1], Transform(3.5f, -10.0f, 27.0f)));
 
     // create the camera
 
@@ -369,11 +376,11 @@ bool BasicSceneRenderer::update(float dt)
 	//player is the first thing we render so it's mEntities 1
 	Entity* playerVehicle = mEntities[1];
 	//test obstacle
-	Entity* obstacle = mEntities[2];
+	Entity* monster = mEntities[2];
 	//position of the car, can use carPos.x, etc. for coordinates
 	glm::vec3 carPos = playerVehicle->getPosition();
 	//position of test obstacle
-	glm::vec3 obsPos = obstacle->getPosition();
+	glm::vec3 obsPos = monster->getPosition();
 
 	// set up for pickup rotation 
 	float rotSpeed = 90;
@@ -389,6 +396,8 @@ bool BasicSceneRenderer::update(float dt)
 	p2y = obsPos.y;
 	p2z = obsPos.z;
 	
+	monsterTimer += 1;
+
 	//collision check with pickups
 	if (playerAttacking && !monsterInvincible) {
 		calculateDistance(true);
@@ -400,8 +409,10 @@ bool BasicSceneRenderer::update(float dt)
 	//std::cout << framebuffer << std::endl;
 
 	if (playerAttacking == true && playerAttackAnimationFinished == true) {
-		if (d > 0) {
+		
+		if (d > 3) {
 			movementBuffer += 1;
+			std::cout << movementBuffer << std::endl;
 			playerVehicle->translateLocal(0.1, 0, 0);
 		}
 		//change image
@@ -412,7 +423,7 @@ bool BasicSceneRenderer::update(float dt)
 		}else { playerWalkingCounter = 3; }
 	}
 
-	if (movementBuffer == 60 && playerAttacking == true) {
+	if (movementBuffer == 60 && playerAttacking == true && monsterInvincible == false) {
 		//attack animation here
 		playerAttackAnimationFinished = false;
 		playerVehicle->setMaterial(mMaterials[playerAttackingCounter]);
@@ -426,7 +437,7 @@ bool BasicSceneRenderer::update(float dt)
 			playerAttackAnimationFinished = true;
 			playerAttacking = false;
 			//TODO: code to calculate damage goes here, make sure it happens before the local translate
-			playerVehicle->translateLocal(-6, 0, 0);
+			playerVehicle->translateLocal(-6.0f, 0, 0);
 			movementBuffer = 0;
 		}
 	}
@@ -451,6 +462,17 @@ bool BasicSceneRenderer::update(float dt)
 	if (kb->isKeyDown(KC_LEFT) && playerDodgingBack == false && playerAttacking == false && playerDodgingDown == false && playerDodgingUp == false) {
 		playerDodgingBack = true;
 		playerVehicle->translateLocal(-3, 0, 0);
+	}
+
+	//monster attacks
+	if (monsterTimer == baseMonsterTimers[level]) {
+		monsterInvincible = true;
+		monster->translateLocal(-6, 0, 0);
+		if (d <= 1 && !playerDodgingUp&&!playerDodgingDown) {
+			std::cout << "hit" << std::endl;
+		}else{ std::cout << "dodge" << std::endl; }
+		monsterTimer = 0;
+		monster->translateLocal(6, 0, 0);
 	}
 
 	//if (!finishLineHit && !wallHit) {
