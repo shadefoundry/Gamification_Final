@@ -21,6 +21,7 @@ bool playerAttackAnimationFinished = true;
 bool monsterInvincible = false;
 
 GLfloat d;
+GLfloat monsterD;
 float score;
 GLfloat p1x;
 GLfloat p1y;
@@ -49,6 +50,10 @@ void calculateDistance(bool player) {
 	if (player == true) {
 		d = sqrt(((p1x - p2x) * (p1x - p2x)) + ((p1y - p2y) * (p1y - p2y)) + ((p1z - p2z) * (p1z - p2z)));
 	}
+}
+
+void calculateMonsterDistance() {
+	monsterD = sqrt(((p1x - p2x) * (p1x - p2x)) + ((p1y - p2y) * (p1y - p2y)) + ((p1z - p2z) * (p1z - p2z)));
 }
 
 void setVSync(bool sync)
@@ -441,6 +446,13 @@ bool BasicSceneRenderer::update(float dt)
 			movementBuffer = 0;
 		}
 	}
+	//cancel attack if monster is attacking so we have a chance to dodge
+	if (monsterInvincible == true && playerAttacking == true) {
+		playerVehicle->translateLocal(-movementBuffer,0,0);
+		playerAttacking = false;
+		playerAttackAnimationFinished = true;
+		//movementBuffer = 0;
+	}
 
 	//player attacks
 	if (kb->isKeyDown(KC_RIGHT) && playerAttacking == false && playerDodgingUp == false && playerDodgingDown == false) {
@@ -467,12 +479,20 @@ bool BasicSceneRenderer::update(float dt)
 	//monster attacks
 	if (monsterTimer == baseMonsterTimers[level]) {
 		monsterInvincible = true;
+		//TODO: figure out why the hell the monster doesn't actually move
 		monster->translateLocal(-6, 0, 0);
-		if (d <= 1 && !playerDodgingUp&&!playerDodgingDown) {
+	}
+
+	if (monsterInvincible == true) {
+		calculateMonsterDistance();
+		std::cout << monsterD << std::endl;
+		if (monsterD <= 4 && !playerDodgingUp && !playerDodgingDown) {
 			std::cout << "hit" << std::endl;
-		}else{ std::cout << "dodge" << std::endl; }
+		}
+		else { std::cout << "dodge" << std::endl; }
 		monsterTimer = 0;
 		monster->translateLocal(6, 0, 0);
+		monsterInvincible = false;
 	}
 
 	//if (!finishLineHit && !wallHit) {
