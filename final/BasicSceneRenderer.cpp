@@ -6,7 +6,7 @@
 #include <iostream>
 
 int level = 0;
-int baseMonsterTimers[] = { 120, 100, 80, 60, 40 };
+int baseMonsterTimers[] = { 240, 200, 160, 120, 80 };
 int monsterTimer = 0;
 
 bool playerAttacking = false;
@@ -148,7 +148,7 @@ void BasicSceneRenderer::initialize()
 	texNames.push_back("textures/playerWalk/6.tga");
 	texNames.push_back("textures/playerWalk/7.tga");
 
-	//player attack cycle, has 8 frames
+	//player attack cycle, has 16 frames
 	texNames.push_back("textures/playerAttack/0.tga");
 	texNames.push_back("textures/playerAttack/1.tga");
 	texNames.push_back("textures/playerAttack/2.tga");
@@ -157,6 +157,18 @@ void BasicSceneRenderer::initialize()
 	texNames.push_back("textures/playerAttack/5.tga");
 	texNames.push_back("textures/playerAttack/6.tga");
 	texNames.push_back("textures/playerAttack/7.tga");
+	texNames.push_back("textures/playerAttack/8.tga");
+	texNames.push_back("textures/playerAttack/9.tga");
+	texNames.push_back("textures/playerAttack/10.tga");
+	texNames.push_back("textures/playerAttack/11.tga");
+	texNames.push_back("textures/playerAttack/12.tga");
+	texNames.push_back("textures/playerAttack/13.tga");
+	texNames.push_back("textures/playerAttack/14.tga");
+	texNames.push_back("textures/playerAttack/15.tga");
+
+	//player dodge animation (only one frame) should be texNames[27]
+	texNames.push_back("textures/playerDodge/0.tga");
+
 
     for (unsigned i = 0; i < texNames.size(); i++)
         mTextures.push_back(new Texture(texNames[i], GL_REPEAT, GL_LINEAR));
@@ -383,24 +395,24 @@ bool BasicSceneRenderer::update(float dt)
 	Entity* playerVehicle = mEntities[1];
 	//test obstacle
 	Entity* monster = mEntities[2];
-	//position of the car, can use carPos.x, etc. for coordinates
-	glm::vec3 carPos = playerVehicle->getPosition();
+	//position of the player, can use carPos.x, etc. for coordinates
+	glm::vec3 playerPosition = playerVehicle->getPosition();
 	//position of test obstacle
-	glm::vec3 obsPos = monster->getPosition();
+	glm::vec3 monsterPosition = monster->getPosition();
 
 	// set up for pickup rotation 
 	float rotSpeed = 90;
 	float rotAmount = rotSpeed * dt;
 
 	//capture of car position
-	p1x = carPos.x;
-	p1y = carPos.y;
-	p1z = carPos.z;
+	p1x = playerPosition.x;
+	p1y = playerPosition.y;
+	p1z = playerPosition.z;
 
 	//capture of object position
-	p2x = obsPos.x;
-	p2y = obsPos.y;
-	p2z = obsPos.z;
+	p2x = monsterPosition.x;
+	p2y = monsterPosition.y;
+	p2z = monsterPosition.z;
 	
 	monsterTimer += 1;
 
@@ -413,19 +425,21 @@ bool BasicSceneRenderer::update(float dt)
 		attackBuffer += 1;
 	}
 	//std::cout << framebuffer << std::endl;
-
+	//playerAttackAnimationFinished actually denotes whether or not the animation is playing
 	if (playerAttacking == true && playerAttackAnimationFinished == true) {
 		
 		if (d > 3) {
+			//movement buffer is a frame counter
 			movementBuffer += 1;
-			std::cout << movementBuffer << std::endl;
+			//std::cout << movementBuffer << std::endl;
 			playerVehicle->translateLocal(0.1, 0, 0);
 		}
 		//change image
-		//TODO: set material every time we move so that we have fluid animation <3
 		playerVehicle->setMaterial(mMaterials[playerWalkingCounter]);
+		//counter for animation cell, we have 8 frames of animation
 		if (playerWalkingCounter < 10) {
 			playerWalkingCounter += 1;
+			//reset counter if it's 10 or higher
 		}else { playerWalkingCounter = 3; }
 	}
 
@@ -433,7 +447,7 @@ bool BasicSceneRenderer::update(float dt)
 		//attack animation here
 		playerAttackAnimationFinished = false;
 		playerVehicle->setMaterial(mMaterials[playerAttackingCounter]);
-		if (playerAttackingCounter < 18) {
+		if (playerAttackingCounter < 26) {
 			//increase counter so we can show another frame
 			playerAttackingCounter += 1;
 		}
@@ -443,11 +457,13 @@ bool BasicSceneRenderer::update(float dt)
 			playerAttackAnimationFinished = true;
 			playerAttacking = false;
 			//TODO: code to calculate damage goes here, make sure it happens before the local translate
+			if (monsterInvincible==true) { std::cout << "Player attack missed!" << std::endl; }
+			else { std::cout << "Player successfully attacks!" << std::endl; }
 			playerVehicle->translateLocal(-6.0f, 0, 0);
+			//make sure you reset the movement buffer when you finish animation
 			movementBuffer = 0;
 		}
 	}
-
 
 	//player attacks
 	if (kb->isKeyDown(KC_RIGHT) && playerAttacking == false && playerDodgingUp == false && playerDodgingDown == false) {
@@ -491,119 +507,6 @@ bool BasicSceneRenderer::update(float dt)
 		//TODO: figure out why the hell the monster doesn't actually move
 		monster->translateLocal(-6, 0, 0);
 	}
-
-	//if (!finishLineHit && !wallHit) {
-
-		// rotate the entity
-		//mEntities[5]->rotate(2.5, 0, 1.0, 0);
-		/*
-		//movement controls for the car, forward, backward, left, right
-		//if key's pressed
-		
-		/*if (kb->isKeyDown(KC_LEFT)) {
-			if (d < 1) {
-				d += 0.1;
-				//std::cout << d << std::endl;
-				//playerVehicle->translateLocal(0.15, 0, 0);
-				mEntities.pop_back();
-				mEntities.push_back(new Entity(mMeshes[0], mMaterials[3], Transform(randomX, -11.5, carPos.z - randomZ)));
-				score += 1;
-				std::cout << score << std::endl;
-			}
-			else if (distLeftWall > 1.1) {
-				playerVehicle->translateLocal(-0.1, 0, 0);
-			}
-			else {
-				// wall hit collision, cause player death
-				wallHit = true;
-
-				// pop pickup to replace with loss condition mesh
-				mEntities.pop_back();
-				if (kb->isKeyDown(KC_UP) || kb->isKeyDown(KC_Z)) { mEntities.push_back(new Entity(mMeshes[7], mMaterials[8], Transform(0, -8, cameraPosition.z - 3, glm::angleAxis(glm::radians(0.0f), glm::vec3(0.0f, 1.0f, 0.0f))))); }
-				else { mEntities.push_back(new Entity(mMeshes[7], mMaterials[8], Transform(0, -8, cameraPosition.z - 2.5, glm::angleAxis(glm::radians(0.0f), glm::vec3(0.0f, 1.0f, 0.0f))))); }
-
-			}
-		}
-		if (kb->isKeyDown(KC_RIGHT)) {
-			//activeEntity->rotate(-rotAmount, 0, 1, 0);
-			if (d < 1) {
-				d += 0.1;
-				//std::cout << d << std::endl;
-				//playerVehicle->translateLocal(-0.15, 0, 0);
-				mEntities.pop_back();
-				mEntities.push_back(new Entity(mMeshes[0], mMaterials[3], Transform(randomX, -11.5, carPos.z - randomZ)));
-				score += 1;
-				std::cout << score << std::endl;
-			}
-			else if (distRightWall > 1.1) {
-				playerVehicle->translateLocal(0.1, 0, 0);
-			}
-			else {
-				// wall hit collision, cause player death
-				wallHit = true;
-
-				// pop pickup to replace with loss condition mesh
-				mEntities.pop_back();
-				if (kb->isKeyDown(KC_UP)|| kb->isKeyDown(KC_Z)) { mEntities.push_back(new Entity(mMeshes[7], mMaterials[8], Transform(0, -8, cameraPosition.z - 3, glm::angleAxis(glm::radians(0.0f), glm::vec3(0.0f, 1.0f, 0.0f))))); }
-				else { mEntities.push_back(new Entity(mMeshes[7], mMaterials[8], Transform(0, -8, cameraPosition.z - 2.5, glm::angleAxis(glm::radians(0.0f), glm::vec3(0.0f, 1.0f, 0.0f))))); }
-				
-
-			}
-
-		}
-		if (kb->isKeyDown(KC_Z) || kb->isKeyDown(KC_UP)) {
-			if (d < 1) {
-				d += 0.1;
-				//std::cout << d << std::endl;
-				//playerVehicle->translateLocal(0, 0, 0.1);
-				mCamera->setPosition(cameraPosition.x, cameraPosition.y, cameraPosition.z);
-				mEntities.pop_back();
-				mEntities.push_back(new Entity(mMeshes[0], mMaterials[3], Transform(randomX, -11.5, carPos.z - randomZ)));
-				score += 1;
-				std::cout << score << std::endl;
-
-			}
-			//if finish line reached, pop car and pickup
-			else if (distFinishLine < 0.525) {
-				finishLineHit = true;
-
-				// pop pickup to replace with win condition mesh
-				mEntities.pop_back();
-				mEntities.push_back(new Entity(mMeshes[7], mMaterials[9], Transform(0, -8, cameraPosition.z - 2.5, glm::angleAxis(glm::radians(0.0f), glm::vec3(0.0f, 1.0f, 0.0f)))));
-			}
-			else {
-				playerVehicle->translateLocal(0, 0, -0.5);
-				mCamera->setPosition(cameraPosition.x, cameraPosition.y, cameraPosition.z - 0.5);
-			}
-
-		}
-		else if (kb->isKeyDown(KC_X) || kb->isKeyDown(KC_DOWN)) {
-			if (d < 1) {
-				d += 0.1;
-				//std::cout << d << std::endl; 
-				//playerVehicle->translateLocal(0, 0, -0.1);
-				mCamera->setPosition(cameraPosition.x, cameraPosition.y, cameraPosition.z);
-				mEntities.pop_back();
-				mEntities.push_back(new Entity(mMeshes[0], mMaterials[3], Transform(randomX, -11.5, carPos.z - randomZ)));
-				score += 1;
-				std::cout << score << std::endl;
-			}
-			//if finish line reached, pop car and pickup
-			else if (distFinishLine < 0.525) {
-				finishLineHit = true;
-
-				// pop pickup to replace with win condition mesh
-				mEntities.pop_back();
-				//winner mesh
-				mEntities.push_back(new Entity(mMeshes[7], mMaterials[9], Transform(0, -8, cameraPosition.z - 2.5, glm::angleAxis(glm::radians(0.0f), glm::vec3(0.0f, 1.0f, 0.0f)))));
-			}
-			else {
-				playerVehicle->translateLocal(0, 0, 0.1);
-				mCamera->setPosition(cameraPosition.x, cameraPosition.y, cameraPosition.z + 0.1);
-			}
-
-		}*/
-	//}
 
     // update the camera
     mCamera->update(dt);
