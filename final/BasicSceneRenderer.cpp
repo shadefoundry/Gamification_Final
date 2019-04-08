@@ -85,7 +85,8 @@ void BasicSceneRenderer::initialize()
     std::cout << "  Movement:           Z/X/Arrow Keys" << std::endl;
 
     glClearColor(0.494117f, 0.75294f, 0.93333f, 1.0f);
-
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
 
@@ -446,13 +447,7 @@ bool BasicSceneRenderer::update(float dt)
 			movementBuffer = 0;
 		}
 	}
-	//cancel attack if monster is attacking so we have a chance to dodge
-	if (monsterInvincible == true && playerAttacking == true) {
-		playerVehicle->translateLocal(-movementBuffer,0,0);
-		playerAttacking = false;
-		playerAttackAnimationFinished = true;
-		//movementBuffer = 0;
-	}
+
 
 	//player attacks
 	if (kb->isKeyDown(KC_RIGHT) && playerAttacking == false && playerDodgingUp == false && playerDodgingDown == false) {
@@ -476,16 +471,11 @@ bool BasicSceneRenderer::update(float dt)
 		playerVehicle->translateLocal(-3, 0, 0);
 	}
 
-	//monster attacks
-	if (monsterTimer == baseMonsterTimers[level]) {
-		monsterInvincible = true;
-		//TODO: figure out why the hell the monster doesn't actually move
-		monster->translateLocal(-6, 0, 0);
-	}
+	
 
 	if (monsterInvincible == true) {
 		calculateMonsterDistance();
-		std::cout << monsterD << std::endl;
+		//std::cout << monsterD << std::endl;
 		if (monsterD <= 4 && !playerDodgingUp && !playerDodgingDown) {
 			std::cout << "hit" << std::endl;
 		}
@@ -493,6 +483,13 @@ bool BasicSceneRenderer::update(float dt)
 		monsterTimer = 0;
 		monster->translateLocal(6, 0, 0);
 		monsterInvincible = false;
+	}
+
+	//monster attacks
+	if (monsterTimer == baseMonsterTimers[level]) {
+		monsterInvincible = true;
+		//TODO: figure out why the hell the monster doesn't actually move
+		monster->translateLocal(-6, 0, 0);
 	}
 
 	//if (!finishLineHit && !wallHit) {
