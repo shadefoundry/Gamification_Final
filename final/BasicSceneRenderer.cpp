@@ -475,10 +475,10 @@ bool BasicSceneRenderer::update(float dt)
 		//update animation
 		playerVehicle->setMaterial(mMaterials[playerDodgeingCounter]);
 
-		if (dodgeBuffer < 40) {
+		if (dodgeBuffer < 20) {
 			//dodge buffer is a frame counter
 			dodgeBuffer += 1;
-			playerVehicle->translateLocal(0, 0, -0.1);
+			playerVehicle->translateLocal(0, 0, -0.2);
 		}
 		else {
 			playerDodgingUp = false;
@@ -496,10 +496,10 @@ bool BasicSceneRenderer::update(float dt)
 		//update animation
 		playerVehicle->setMaterial(mMaterials[playerDodgeingCounter]);
 
-		if (dodgeBuffer < 40) {
+		if (dodgeBuffer < 20) {
 			//dodge buffer is a frame counter
 			dodgeBuffer += 1;
-			playerVehicle->translateLocal(0, 0, 0.1);
+			playerVehicle->translateLocal(0, 0, 0.2);
 		}
 		else {
 			playerDodgingDown = false;
