@@ -6,7 +6,7 @@
 #include <iostream>
 
 int level = 0;
-int baseMonsterTimers[] = { 240, 200, 160, 120, 80 };
+int baseMonsterTimers[] = { 120, 200, 160, 120, 80 }; //TODO: change first 120 back to 240
 int monsterTimer = 0;
 
 bool playerAttacking = false;
@@ -15,7 +15,6 @@ float movementBuffer = 0;
 float playerAttackingCounter = 11;
 float playerWalkingCounter = 3;
 bool playerAttackAnimationFinished = true;
-bool monsterInvincible = false;
 
 float dodgeBuffer = 0;
 float playerDodgeingCounter = 27;
@@ -23,6 +22,12 @@ bool playerDodgingUp = false;
 bool playerDodgingDown = false;
 bool playerFinishedDodge = false;
 //bool playerDodgingBack = false;
+
+bool monsterInvincible = false;
+bool monsterAttacking = false;
+float monsterSideMovementBuffer = 0;
+float monsterForwardMovementBuffer = 0;
+float monsterAttackBuffer = 0;
 
 GLfloat d;
 GLfloat monsterD;
@@ -448,7 +453,7 @@ bool BasicSceneRenderer::update(float dt)
 	}
 
 	//once certain walking position is hit, begin attack
-	if (movementBuffer == 60 && playerAttacking == true && monsterInvincible == false) {
+	if (movementBuffer == 60 && playerAttacking == true) {
 		//attack animation here
 		playerAttackAnimationFinished = false;
 		playerVehicle->setMaterial(mMaterials[playerAttackingCounter]);
@@ -539,25 +544,71 @@ bool BasicSceneRenderer::update(float dt)
 	}
 	*/
 
-	
-	if (monsterInvincible == true) {
+
+	//monster attack action, single hit
+	if (monsterAttacking == true) {
 		calculateMonsterDistance();
 		//std::cout << monsterD << std::endl;
 		if (monsterD <= 4 && !playerDodgingUp && !playerDodgingDown) {
 			std::cout << "hit" << std::endl;
 		}
 		else { std::cout << "dodge" << std::endl; }
+
+		//attack finished, return to start
 		monsterTimer = 0;
 		monster->translateLocal(6, 0, 0);
 		monsterInvincible = false;
+		monsterAttacking = false;
 	}
 
-	//monster attacks
+	//monster movement action, animations to attack position
+	if (monsterInvincible) {
+		//begin move to attack position
+
+		//if side movement buffer is less than x
+			//start filling to animate sides
+		//else if side movement buffer is complete and forward buffer is less than x
+			//continue movement until attack position reached
+			//set off monster attacking flag
+
+		//movement buffer may be variable depending 
+		//	on the move variations
+		if (monsterSideMovementBuffer < 40) {
+			//side moves
+			if (monsterSideMovementBuffer < 20) {
+				monsterSideMovementBuffer += 1;
+				monster->translateLocal(0, 0, -0.3);
+			}
+			else {
+				monsterSideMovementBuffer += 1;
+				monster->translateLocal(0, 0, 0.3);
+			}
+
+		}
+		else if (monsterSideMovementBuffer == 40 && monsterForwardMovementBuffer < 30) {
+			//forward lunge
+			monsterForwardMovementBuffer += 1;
+			monster->translateLocal(-0.2, 0, 0);
+		}
+		else {
+			//reset buffers 
+			monsterForwardMovementBuffer = 0;
+			monsterSideMovementBuffer = 0;
+
+			//once monster in position, hit flag to commence monster attacking
+			monsterAttacking = true;
+		}
+		
+	}
+
+	//monster attack timer
 	if (monsterTimer == baseMonsterTimers[level]) {
 		monsterInvincible = true;
+
 		//TODO: figure out why the hell the monster doesn't actually move
-		monster->translateLocal(-6, 0, 0);
+		//monster->translateLocal(-6, 0, 0);
 	}
+
 
     // update the camera
     mCamera->update(dt);
