@@ -14,11 +14,15 @@ float attackBuffer = 0;
 float movementBuffer = 0;
 float playerAttackingCounter = 11;
 float playerWalkingCounter = 3;
-bool playerDodgingUp = false;
-bool playerDodgingDown = false;
-bool playerDodgingBack = false;
 bool playerAttackAnimationFinished = true;
 bool monsterInvincible = false;
+
+float dodgeBuffer = 0;
+float playerDodgeingCounter = 27;
+bool playerDodgingUp = false;
+bool playerDodgingDown = false;
+bool playerFinishedDodge = false;
+//bool playerDodgingBack = false;
 
 GLfloat d;
 GLfloat monsterD;
@@ -443,6 +447,7 @@ bool BasicSceneRenderer::update(float dt)
 		}else { playerWalkingCounter = 3; }
 	}
 
+	//once certain walking position is hit, begin attack
 	if (movementBuffer == 60 && playerAttacking == true && monsterInvincible == false) {
 		//attack animation here
 		playerAttackAnimationFinished = false;
@@ -465,30 +470,76 @@ bool BasicSceneRenderer::update(float dt)
 		}
 	}
 
+	//dodging up
+	if (playerDodgingUp == true && playerDodgingDown == false) {
+		//update animation
+		playerVehicle->setMaterial(mMaterials[playerDodgeingCounter]);
+
+		if (dodgeBuffer < 40) {
+			//dodge buffer is a frame counter
+			dodgeBuffer += 1;
+			playerVehicle->translateLocal(0, 0, -0.1);
+		}
+		else {
+			playerDodgingUp = false;
+			playerVehicle->translateLocal(0, 0, 4);
+			dodgeBuffer = 0;
+
+			//restore image
+			playerVehicle->setMaterial(mMaterials[playerWalkingCounter]);
+		}
+
+	}
+
+	//dodging down
+	if (playerDodgingDown == true && playerDodgingUp == false) {
+		//update animation
+		playerVehicle->setMaterial(mMaterials[playerDodgeingCounter]);
+
+		if (dodgeBuffer < 40) {
+			//dodge buffer is a frame counter
+			dodgeBuffer += 1;
+			playerVehicle->translateLocal(0, 0, 0.1);
+		}
+		else {
+			playerDodgingDown = false;
+			playerVehicle->translateLocal(0, 0, -4);
+			dodgeBuffer = 0;
+
+			//restore image
+			playerVehicle->setMaterial(mMaterials[playerWalkingCounter]);
+		}
+	}
+
+
+
 	//player attacks
 	if (kb->isKeyDown(KC_RIGHT) && playerAttacking == false && playerDodgingUp == false && playerDodgingDown == false) {
 		playerAttacking = true;
 	}
 
 	//player dodges up
-	if (kb->isKeyDown(KC_UP) && playerAttacking == false && playerDodgingUp == false) {
+	if (kb->isKeyDown(KC_UP) && playerAttacking == false && playerDodgingUp == false && playerDodgingDown == false) {
 		playerDodgingUp = true;
-		playerVehicle->translateLocal(0, 0, -4);
+		//playerVehicle->translateLocal(0, 0, -4);
 	}
 
 	//player dodges down
-	if (kb->isKeyDown(KC_DOWN) && playerAttacking == false && playerDodgingDown == false) {
+	if (kb->isKeyDown(KC_DOWN) && playerAttacking == false && playerDodgingDown == false && playerDodgingUp == false) {
 		playerDodgingDown = true;
-		playerVehicle->translateLocal(0, 0, 4);
+		//playerVehicle->translateLocal(0, 0, 4);
 	}
 
+	//not available for now
+	//player dodges left
+	/*
 	if (kb->isKeyDown(KC_LEFT) && playerDodgingBack == false && playerAttacking == false && playerDodgingDown == false && playerDodgingUp == false) {
 		playerDodgingBack = true;
 		playerVehicle->translateLocal(-3, 0, 0);
 	}
+	*/
 
 	
-
 	if (monsterInvincible == true) {
 		calculateMonsterDistance();
 		//std::cout << monsterD << std::endl;
