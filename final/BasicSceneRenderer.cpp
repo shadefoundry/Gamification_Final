@@ -6,7 +6,11 @@
 #include <iostream>
 
 int level = 0;
-int baseMonsterTimers[] = { 120, 200, 160, 120, 80 }; //TODO: change first 120 back to 240
+int baseMonsterTimers[] = { 240, 200, 160, 120, 80 }; //TODO: change first 120 back to 240
+int monsterHealths[] = { 3,5,7,9,11 };
+int monsterDistances[] = { 3.8,3.8,3.8,3.8,3.8 };
+int monsterHealth = 0;
+int playerHealth = 10;
 int monsterTimer = 0;
 
 bool playerAttacking = false;
